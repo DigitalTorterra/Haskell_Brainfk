@@ -59,9 +59,7 @@ readInstruction (InstructionTape xs ptr)
   | otherwise = Just $ xs !! ptr
 
 readMemory :: MemoryTape -> Maybe Char
-readMemory (MemoryTape xs ptr)
-  | ptr < 0 = Nothing
-  | otherwise = Just $ xs !! ptr
+readMemory (MemoryTape xs ptr) = safeIndex ptr xs
 
 getStateInstruction :: ProgramState -> Maybe Command
 getStateInstruction = readInstruction . fst
@@ -91,8 +89,7 @@ changeData amt (instrs, MemoryTape mems dp) = (instrs, MemoryTape mems' dp)
 
 jumpProgram :: ProgramState -> ProgramState
 jumpProgram (instrs, mem) = (instrs', mem)
-  where curr_symbol = readInstruction instrs
-        f :: Int -> Command -> InstructionTape -> InstructionTape
+  where f :: Int -> Command -> InstructionTape -> InstructionTape
         f levels target cmds
           | new_symbol == Nothing || (new_symbol == Just target && levels == 0) = cmds'
           | new_symbol == Just target_inverse = f (levels+1) target cmds'
@@ -104,6 +101,7 @@ jumpProgram (instrs, mem) = (instrs', mem)
                 target_inverse = invertCommand target
                 cmds' = updateInstructionPointer dir cmds
                 new_symbol = readInstruction cmds'
+        curr_symbol = readInstruction instrs
         instrs' = case curr_symbol of Just x -> f 0 (invertCommand x) instrs
                                       Nothing -> instrs
 

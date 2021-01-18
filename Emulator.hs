@@ -32,6 +32,12 @@ emulate = do
                       incrementProgramCounterM
                )
 
+liftStateFunction :: (a -> a) -> StateT a IO ()
+liftStateFunction f = do
+  my_state <- get
+  put $ f my_state
+  return ()
+
 printCurrentState :: StateT ProgramState IO ()
 printCurrentState = do
   my_state <- get
@@ -50,22 +56,13 @@ getStateInstructionM = do
   return . fromJust . getStateInstruction $ my_state
 
 incrementProgramCounterM :: StateT ProgramState IO ()
-incrementProgramCounterM = do
-  my_state <- get
-  put $ incrementProgramCounter my_state
-  return ()
+incrementProgramCounterM = liftStateFunction incrementProgramCounter
 
 moveDataPointerM :: Int -> StateT ProgramState IO ()
-moveDataPointerM x = do
-  my_state <- get
-  put $ moveDataPointer x my_state
-  return ()
+moveDataPointerM x = liftStateFunction $ moveDataPointer x
 
 changeDataM :: Int -> StateT ProgramState IO ()
-changeDataM x = do
-  my_state <- get
-  put $ changeData x my_state
-  return ()
+changeDataM x = liftStateFunction $ changeData x
 
 outputCharacterM :: StateT ProgramState IO ()
 outputCharacterM = do
